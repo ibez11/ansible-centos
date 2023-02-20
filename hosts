@@ -1,0 +1,5 @@
+[hostname-dev]
+<111.111.33.11> ansible_port=22 ansible_ssh_user=user ansible_python_interpreter=/usr/libexec/platform-python 
+
+[hostname-prd]
+<111.111.22.11> ansible_port=22 ansible_ssh_user=user ansible_python_interpreter=/usr/libexec/platform-python 

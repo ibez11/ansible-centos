@@ -1,0 +1,30 @@
+- name: Install Redis
+  hosts: "{{hosts}}"
+  gather_facts: True
+  become: true
+  strategy: free
+  vars:
+    redis_port: 6379
+    redis_databases: 1
+  tasks:
+    - name: Ensure Redis is present
+      yum:
+        name: redis
+        state: latest
+      become: yes
+
+    - name: Ensure Redis Configuration
+      template: src=../../config/redis/redis.conf dest=/etc/redis.conf owner=redis group=root mode=0600
+      become: yes
+
+    - name: Ensure Redis is started
+      systemd:
+        name: redis
+        state: started
+
+    - name: Ensure Redis is enable
+      systemd:
+        name: redis
+        enabled: true
+        masked: no
+

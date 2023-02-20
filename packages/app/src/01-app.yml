@@ -1,0 +1,152 @@
+---
+- hosts: "{{hosts}}"
+  gather_facts: True
+  become: true
+  strategy: free
+  vars_files:
+    - ../../../vars/credentials.anvars
+  tasks:
+    - name: Enable EPEL Repository on CentOS 8
+      dnf:
+        name: epel-release
+        state: latest
+      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts ['distribution_major_version'] >= '8'
+
+    - name: Enable EPEL Repository on CentOS 7
+      yum:
+        name: epel-release
+        state: latest
+      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts ['distribution_major_version'] == '7'
+    
+    - name: Install device-mapper-persistent-data
+      dnf:
+        name: device-mapper-persistent-data
+        state: latest
+      become: yes
+
+    - name: Install lvm2
+      dnf:
+        name: lvm2
+        state: latest
+      become: yes
+
+    - name: Add Docker repo
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+      become: yes
+
+    - name: Install Docker
+      package:
+        name: docker-ce
+        state: latest
+      become: yes
+    
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+      become: yes
+    
+    - name: Add user "{{ USERS }}" to docker group
+      user:
+        name: "{{ USERS }}"
+        groups: docker
+        append: yes
+      become: yes
+
+    - name: check permission
+      ansible.builtin.file:
+        path: "/var/run/docker.sock"
+        owner: "root"
+        group: "docker"
+        mode: '0777'
+
+    - name: Install epel-release
+      dnf:
+        name: epel-release
+        state: latest
+      become: yes
+
+    - name: Install certbot
+      dnf:
+        name: certbot
+        state: latest
+      become: yes
+    
+    - name: Install python3-certbot-nginx
+      dnf:
+        name: python3-certbot-nginx
+        state: latest
+      become: yes
+
+    - name: Install git
+      dnf:
+        name: git
+        state: latest
+      become: yes
+
+    - name: Install policycoreutils
+      dnf:
+        name: policycoreutils
+        state: latest
+      become: yes
+    
+    - name: Install python3-pip
+      dnf:
+        name: python3-pip
+        state: latest
+      become: yes
+
+    - name: Install firewalld
+      dnf:
+        name: firewalld
+        state: latest
+      become: yes
+
+    - name: Ensure Firewall is started
+      systemd:
+        name: firewalld
+        state: started
+
+    - name: Ensure Firewall is enable
+      systemd:
+        name: firewalld.service
+        enabled: true
+        masked: no
+
+    - name: "Install awscli"
+      shell: "{{ item }}"
+      with_items:    
+        - pip3 install awscli --upgrade --user
+        - export PATH=~/.local/bin:$PATH
+      become_user: "{{ USERS }}"
+
+    - name: Configure AWS.
+      shell: aws configure set {{ item.key }} {{ item.value }} --profile {{ AWS_PROFILE }}
+      with_dict:
+        aws_access_key_id: "{{ AWS_ACCESS_KEY_ID }}"
+        aws_secret_access_key: "{{ AWS_SECRET_ACCESS_KEY }}"
+        region: "{{ AWS_DEFAULT_REGION }}"
+        format: "{{AWS_FORMAT}}"
+      changed_when: false
+      become_user: "{{ USERS }}"
+    
+    - name: Ensure ssh Configuration
+      template: src=../../config/sshd/sshd_config dest=/etc/ssh/sshd_config owner=root group=root mode=0644
+      become: yes
+
+    - name: "Bind SSH daemon"
+      shell: "{{ item }}"
+      with_items:    
+        - semanage port -a -t ssh_port_t -p tcp 64000
+        - semanage port -m -t ssh_port_t -p tcp 64000
+        - firewall-cmd --add-port=64000/tcp --permanent
+        - firewall-cmd --remove-service=ssh --permanent
+
+    - name: Ensure sshd is started
+      systemd:
+        name: sshd
+        state: restarted
+

@@ -1,0 +1,39 @@
+---
+- hosts: "{{hosts}}"
+  gather_facts: True
+  become: true
+  strategy: free
+  vars_files:
+    - ../../../vars/certbot.yml
+  tasks:
+    - name: Creates daily renew certbot
+      cron:
+        name: "### Creates daily renew certbot"
+        minute: 0
+        hour: "18"
+        day: "*"
+        month: "*"
+        weekday: "*"
+        job: "export PATH=~/.local/bin:$PATH && docker stop {{IMAGE_ID_DEV}} && certbot renew --quiet && docker start {{IMAGE_ID_DEV}} && aws s3 rm s3://{{BUCKET_DEV}}/cert --recursive && aws s3 sync /etc/letsencrypt/live/{{DOMAIN_DEV}}/. s3://{{BUCKET_DEV}}/cert && docker restart {{IMAGE_ID_DEV}}"
+        user: root
+      tags:
+        - certbot
+        - cronjobs
+      become: yes
+      when: '"{{env}}" == "DEV"'
+
+    - name: Creates daily renew certbot
+      cron:
+        name: "### Creates daily renew certbot"
+        minute: 0
+        hour: "18"
+        day: "*"
+        month: "*"
+        weekday: "*"
+        job: "export PATH=~/.local/bin:$PATH && docker stop {{IMAGE_ID_PRD}} && certbot renew --quiet && docker start {{IMAGE_ID_PRD}} && aws s3 rm s3://{{BUCKET_PRD}}/cert --recursive && aws s3 sync /etc/letsencrypt/live/{{DOMAIN_PRD}}/. s3://{{BUCKET_PRD}}/cert && docker restart {{IMAGE_ID_PRD}}"
+        user: root
+      tags:
+        - certbot
+        - cronjobs
+      become: yes
+      when: '"{{env}}" == "PRD"'

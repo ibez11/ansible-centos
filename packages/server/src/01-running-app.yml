@@ -1,0 +1,41 @@
+---
+- hosts: "{{hosts}}"
+  gather_facts: True
+  strategy: free
+  become_user: "{{ USERS }}"
+  vars_files:
+    - ../../../vars/credentials.anvars
+    - ../../../vars/docker-image.yml
+  tasks:
+    - name: "Login aws ECR"
+      shell: "{{ item }}"
+      with_items:    
+        - $(aws ecr get-login --no-include-email --region {{AWS_DEFAULT_REGION}})
+      become_user: "{{ USERS }}"
+
+    - name: "Pull default Docker image"
+      shell: "{{ item }}"
+      with_items:    
+        - docker pull {{IMAGE_NGINX_PATH_DEV}}
+      become_user: "{{ USERS }}"
+      when: '"{{env}}" == "DEV"'
+
+    - name: "Pull default Docker image"
+      shell: "{{ item }}"
+      with_items:    
+        - docker pull {{IMAGE_NGINX_PATH_PRD}}
+      become_user: "{{ USERS }}"
+      when: '"{{env}}" == "PRD"'
+
+    - name: "Run docker image"
+      shell: "{{ item }}"
+      with_items:    
+        - docker run --shm-size=8gb -p 5000:5000 --restart always -d {{IMAGE_APP_PATH_DEV}}
+      when: '"{{env}}" == "DEV"'
+
+    - name: "Run docker image"
+      shell: "{{ item }}"
+      with_items:    
+        - docker run --shm-size=8gb -p 5000:5000 --restart always -d {{IMAGE_APP_PATH_DEV}}
+      when: '"{{env}}" == "PRD"'
+    

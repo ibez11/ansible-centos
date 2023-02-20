@@ -1,0 +1,7 @@
+## Docker Image
+IMAGE_NGINX_PATH_DEV: dkr.ecr.ap-southeast-1.amazonaws.com/nginx:latest
+IMAGE_APP_PATH_DEV: dkr.ecr.ap-southeast-1.amazonaws.com/app-majulah:latest
+IMAGE_NGINX_PATH_PRD: dkr.ecr.ap-southeast-1.amazonaws.com/nginx:latest
+IMAGE_APP_PATH_PRD: dkr.ecr.ap-southeast-1.amazonaws.com/app-majulah:latest
+BUCKET_DEV: <bucket_config_nginx_dev>
+BUCKET_PRD: <bucket_config_nginx_prd>

@@ -1,0 +1,9 @@
+EMAIL: ibez11@gmail.com
+## Certbot Config
+DOMAIN_DEV: <domain_dev>
+DOMAIN_PRD: <domain_prd>
+IMAGE_ID_DEV: f3855aa635d0
+IMAGE_ID_PRD: f3855aa635d0
+BUCKET_DEV: <bucket_config_nginx_dev>
+BUCKET_PRD: <bucket_config_nginx_prd>
+

@@ -1,0 +1,6 @@
+DB: <db_name>
+USER: <db_user>
+PASSWORD: passwourld
+PRIVILEGES: '*.*:ALL'
+HOST: '%'
+BIND:
